@@ -168,10 +168,11 @@
 ## 开发
 
 ```bash
-npm test                        # 252 条用例、46 个测试套件，全部通过
+npm test                        # 258 条用例、46 个测试套件，全部通过
 npm run check                   # 语法 / 引擎产物新鲜度 / manifest / 单测 / 规则回归，一次跑完
 node tools/regression.mjs       # 规则回归 CLI，与评估报告数字对齐
 node scripts/build-engine.mjs   # 改 engine/ 后重建 src/lib/engine-bundle.js
+npm run package                 # 打包成 dist/bilibili-fish-cleaner-v*.zip
 ```
 
 约束：
@@ -180,6 +181,8 @@ node scripts/build-engine.mjs   # 改 engine/ 后重建 src/lib/engine-bundle.js
 - `test/engine/*.test.js` 有 26 条规则回归用例，钉住各规则版本的行为。
 - 已发布规则版本不可改写，只能新增版本（旧版本保留在 `FROZEN` 中供回归对照）。
 - 改了 `engine/` 之后要重建内容脚本用的打包产物，否则浏览器里跑的仍是旧引擎。
+实机 E2E 脚本在 `scripts/e2e/`，需要一个本地 Edge 与 `playwright-core`（`npm i --no-save playwright-core`），并准备一个已登录 B 站的浏览器 profile；`npm run e2e` 只跑冒烟，完整验收脚本在维护者本地。
+
 - 内容脚本按 `manifest.json` 中的顺序加载，模块之间通过全局命名空间 `DSHCC` 暴露，顺序错误会缺依赖（`test/manifest-order.test.mjs` 守卫）。
 
 ---

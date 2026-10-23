@@ -28,12 +28,17 @@ const PLAYWRIGHT_DIRS = [
 ];
 
 export function loadPlaywright() {
-  for (const dir of PLAYWRIGHT_DIRS) {
+  const candidates = process.env.DSHCC_PLAYWRIGHT
+    ? [process.env.DSHCC_PLAYWRIGHT, ...PLAYWRIGHT_DIRS]
+    : PLAYWRIGHT_DIRS;
+  for (const dir of candidates) {
     if (!existsSync(join(dir, 'playwright-core'))) continue;
     const require = createRequire(join(dir, 'noop.js'));
     return require('playwright-core');
   }
-  throw new Error('找不到 playwright-core：本仓库不引入依赖，请确认 .scratch/comment-cleanup/tools-dom/node_modules 还在');
+  throw new Error(
+    '找不到 playwright-core：E2E 脚本需要它在本地。装法：npm i --no-save playwright-core，或用 DSHCC_PLAYWRIGHT 指向已有的 node_modules 目录。'
+  );
 }
 
 export function watchdog(ms = 150000) {
@@ -49,13 +54,15 @@ export async function launch(playwright, options = {}) {
   // 允许传 playwright 模块，也允许直接传 chromium（两种写法都常见，传错了会很难查）。
   const mod = playwright || loadPlaywright();
   const chromium = mod.chromium || mod;
+  // 默认加载本仓库；冒烟测试要验证「用户下载解压出来的包」时，换成解压目录。
+  const extensionDir = options.extensionDir || ROOT;
   const context = await chromium.launchPersistentContext(PROFILE, {
     executablePath: EDGE,
     headless: options.headless ?? false,
     viewport: options.viewport ?? { width: 1280, height: 900 },
     args: [
-      `--disable-extensions-except=${ROOT}`,
-      `--load-extension=${ROOT}`,
+      `--disable-extensions-except=${extensionDir}`,
+      `--load-extension=${extensionDir}`,
       '--no-first-run',
       '--no-default-browser-check',
       // 固定 profile 用久了会攒下「上次未关闭的标签页」，Edge 一启动就把它们全部恢复，
