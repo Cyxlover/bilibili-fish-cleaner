@@ -1,0 +1,11 @@
+#!/bin/sh
+# 推送前跑全量自检（含 95 项规则回归），失败则中止推送。
+
+set -e
+
+if [ -f scripts/check.mjs ]; then
+  if ! node scripts/check.mjs; then
+    echo "全量自检未通过，推送已中止。" >&2
+    exit 1
+  fi
+fi

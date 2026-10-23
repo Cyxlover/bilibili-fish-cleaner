@@ -1,0 +1,22 @@
+name: check
+
+# 唯一的门禁：语法、引擎产物新鲜度、manifest 完整性、单元测试、规则回归。
+# 任何一步失败即红。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: 全量自检
+        run: npm run check

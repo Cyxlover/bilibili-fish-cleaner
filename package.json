@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "node --test test/*.test.mjs test/engine/*.test.js",
+    "check": "node scripts/check.mjs",
+    "check:fast": "node scripts/check.mjs --fast",
+    "hooks:install": "node scripts/install-hooks.mjs",
+    "build:engine": "node scripts/build-engine.mjs",
+    "e2e": "node scripts/e2e-verify.mjs",
+    "package": "node scripts/package.mjs"
+  },
+  "version": "0.2.0"
+}

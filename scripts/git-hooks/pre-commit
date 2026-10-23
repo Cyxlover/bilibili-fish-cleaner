@@ -1,0 +1,29 @@
+#!/bin/sh
+# 提交前拦截两件事：
+#   1. 浏览器 profile / cookie / 凭据类文件绝不入库（本仓库曾把 1681 个含登录态的
+#      浏览器文件提交进库，后来花了额外一次历史重写才清掉）；
+#   2. 快速自检必须通过（语法 + 引擎产物新鲜度 + manifest + 单元测试）。
+#
+# 确需跳过时用 git commit --no-verify，但不要用它绕过第 1 条。
+
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+if [ -n "$staged" ]; then
+  bad=$(printf '%s\n' "$staged" \
+    | grep -Ei '(^|/)(Cookies|Login Data|Local State|Web Data|History|Preferences|Bookmarks)$|\.(sqlite|sqlite3)$|user-data-dir|\.e2e-profile|(^|/)\.env$' \
+    || true)
+  if [ -n "$bad" ]; then
+    echo "拒绝提交：以下文件属于浏览器配置/凭据类，不应入库。" >&2
+    printf '  %s\n' "$bad" >&2
+    echo "处理方式：git rm --cached <文件>，并把路径写进 .gitignore。" >&2
+    exit 1
+  fi
+fi
+
+if [ -f scripts/check.mjs ]; then
+  if ! node scripts/check.mjs --fast; then
+    echo "快速自检未通过，提交已中止（修好后重试；临时跳过用 --no-verify）。" >&2
+    exit 1
+  fi
+fi

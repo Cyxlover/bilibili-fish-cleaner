@@ -1,0 +1,24 @@
+node_modules/
+.worktrees/
+*.log
+
+# E2E 产物与浏览器配置：可重跑，不入库
+e2e-artifacts/
+.e2e-profile*/
+
+# 研究阶段的体量型产物：可复现，不入库
+.scratch/comment-cleanup/tools-dom/debug/
+.scratch/comment-cleanup/research/dom-snapshot/*.page.html
+.scratch/comment-cleanup/samples/raw/fish-*.json
+.scratch/comment-cleanup/samples/raw/control-*.json
+.scratch/comment-cleanup/samples/_review/labels.provisional.jsonl
+.scratch/comment-cleanup/samples/_review/review.md
+
+# E2E 登录态 profile（含 cookie，绝不入库）
+.e2e-profile/
+.scratch/comment-cleanup/validation/e2e/
+.scratch/comment-cleanup/tools-dom/.e2e-profile/
+.scratch/comment-cleanup/validation/e2e-real/*.png
+
+# 打包产物
+ dist/
