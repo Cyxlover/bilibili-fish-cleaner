@@ -1,0 +1,62 @@
+name: release
+
+# 打 tag（v*）时自动构建可安装的 zip 并挂到 GitHub Release。
+# 用仓库自带的 GITHUB_TOKEN，不依赖个人 token 的权限范围。
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '要发布的已有 tag（例如 v0.2.0）'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 自检
+        run: npm run check
+
+      - name: 打包
+        run: node scripts/package.mjs --stage-only --out dist
+
+      - name: 压缩
+        run: |
+          VERSION=$(node -p "require('./manifest.json').version")
+          ASSET="bilibili-fish-cleaner-v${VERSION}.zip"
+          cd "dist/bilibili-fish-cleaner-v${VERSION}"
+          zip -r -9 "../${ASSET}" .
+          cd ../..
+          echo "ASSET=dist/${ASSET}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+
+      - name: 发布
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: ${{ inputs.tag || github.ref_name }} — 清除强度三档
+          body: |
+            ## 安装
+            1. 下载下面的 `bilibili-fish-cleaner-v*.zip` 并解压到固定目录。
+            2. Edge 打开 `edge://extensions`，开「开发人员模式」。
+            3. 「加载解压缩的扩展」→ 选解压出来的目录。
+            4. 打开任意 B 站视频页，右下角出现角标即成功。
+
+            判定全部在本地完成，不上报；自动清除默认关闭。
+          files: ${{ env.ASSET }}
+          fail_on_unmatched_files: true

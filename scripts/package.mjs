@@ -1,12 +1,15 @@
 // 打包成可直接分发的 zip：只放运行时需要的文件，不带测试、研究数据与开发脚本。
-// 用法：node scripts/package.mjs [--out <目录>]
+// 用法：node scripts/package.mjs [--out <目录>] [--stage-only]
+//   --stage-only 只把文件铺到 <out>/<名字>/ 目录，由 CI 自己压缩（跨平台同构）。
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+
+import { makeZip } from './lib/zip.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const argOut = process.argv.indexOf('--out');
 const OUT_DIR = argOut > -1 ? path.resolve(process.argv[argOut + 1]) : path.join(ROOT, 'dist');
+const STAGE_ONLY = process.argv.includes('--stage-only');
 
 /** 进包的东西：manifest + 图标 + 运行时脚本 + 用户文档。 */
 const INCLUDE = ['manifest.json', 'icons', 'src', 'README.md', 'INSTALL.md', 'LICENSE'];
@@ -78,14 +81,16 @@ for (const rel of files) {
   fs.copyFileSync(path.join(ROOT, rel), dest);
 }
 
-// 4) 打 zip（用系统自带的 Compress-Archive，避免引入依赖）
+// 4) 打 zip（自己的写入器，Windows 与 Linux 产物一致）
 const zipPath = path.join(OUT_DIR, zipName);
 rmrf(zipPath);
-execFileSync(
-  'powershell',
-  ['-NoProfile', '-NonInteractive', '-Command', `Compress-Archive -Path '${path.join(OUT_DIR, stageName, '*')}' -DestinationPath '${zipPath}' -Force`],
-  { stdio: 'inherit' }
-);
+if (STAGE_ONLY) {
+  console.log(`已铺好待打包目录：${path.join(OUT_DIR, stageName)}`);
+  console.log('  （--stage-only：不生成 zip）');
+  process.exit(0);
+}
+const entries = files.map((rel) => ({ name: `${stageName}/${rel}`, data: fs.readFileSync(path.join(ROOT, rel)) }));
+fs.writeFileSync(zipPath, makeZip(entries));
 
 const bytes = files.reduce((n, f) => n + fs.statSync(path.join(ROOT, f)).size, 0);
 const kb = (n) => (n / 1024).toFixed(1) + ' KB';

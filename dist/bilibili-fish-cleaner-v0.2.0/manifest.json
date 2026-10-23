@@ -1,0 +1,63 @@
+{
+  "manifest_version": 3,
+  "name": "大肥鱼清除计划",
+  "version": "0.2.0",
+  "description": "在本地读取哔哩哔哩视频评论区，按规则标记或清除可疑评论；默认关闭，可随时开关。",
+  "minimum_chrome_version": "120",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.bilibili.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  },
+  "action": {
+    "default_title": "大肥鱼清除计划",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.bilibili.com/video/*"
+      ],
+      "js": [
+        "src/lib/comment-key.js",
+        "src/lib/dom-selectors.js",
+        "src/lib/content-gate.js",
+        "src/lib/page-adapter.js",
+        "src/lib/engine-bundle.js",
+        "src/lib/purge-settings.js",
+        "src/lib/purge-strength.js",
+        "src/lib/purge-marker.js",
+        "src/lib/purge-records.js",
+        "src/lib/purge-state.js",
+        "src/lib/purge-state-store.js",
+        "src/lib/purge-controller.js",
+        "src/lib/profile-client.js",
+        "src/ui/badge.js",
+        "src/ui/manual-actions.js",
+        "src/lib/message-bridge.js",
+        "src/content/main.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
